@@ -1,29 +1,58 @@
-const express = require('express');
-const User = require('../models/User');
-const { body, validationResult } = require('express-validator');
+const express = require("express");
+const User = require("../models/User");
+const { body, validationResult } = require("express-validator");
+const bycrypt = require("bcryptjs");
+const jwt = require('jsonwebtoken');
 
 const router = express.Router();
 
-//create a user using:Post "/api/auth"(Auth.js not required)
-router.post('/',[
-    body('email', 'Enter a valid Name').isEmail(),
-    body('name').isLength({min:3}),
-    body('password').isLength({min:8}),
-] ,(req,res)=>{
+const JWT_SECRET = "notex"
+
+//create a user using:Post "/api/auth"(Auth.js not required) No Login Required
+router.post(
+  "/createuser",
+  [
+    body("email", "Enter a valid Name").isEmail(),
+    body("name").isLength({ min: 3 }),
+    body("password").isLength({ min: 8 }),
+  ],
+  async (req, res) => {
+    //if error
     const errors = validationResult(req);
     if (!errors.isEmpty()) {
       return res.status(400).json({ errors: errors.array() });
     }
-    //console.log(req.body);
-    User.create({
+    //check if user with email exist
+    try {
+    let user = await User.findOne({ email: req.body.email });
+    if (user) {
+      return res.status(400).json({ error: "User With Email Already Exists" });
+    }
+
+        const salt = await bycrypt.genSalt(10)
+        const secPass = await bycrypt.hash(req.body.password,salt)
+        
+        
+    user = await User.create({
         name: req.body.name,
-        password: req.body.password,
-        email:req.body.email
-      }).then(user => res.json(user))
-      .catch(err => {console.log(err)
-          res.json({error:'please enter unique value for email'})
-      })
+        password: secPass,
+        email: req.body.email,
+      });
+      //.then(user => res.json(user))
+      //    .catch(err => {console.log(err)
+      //      res.json({error:'please enter unique value for email'})
+      //})
+      
+      const data = {user:{
+          id:user.id
+      }}
+      const auth_token = jwt.sign(data, JWT_SECRET);
+      res.json({auth_token});
+    } catch (error) {
+      console.error(error.message);
+      res.status(500).send("error");
+    }
+  }
+);
 
-})
-
-module.exports=router
+module.exports = router;
