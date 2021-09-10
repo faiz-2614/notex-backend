@@ -4,13 +4,13 @@ const Notes = require("../models/Notes");
 const router = express.Router();
 const { body, validationResult } = require("express-validator");
 
-//Fetch All Notes
+//Fetch All Notes GET Login Required
 router.get("/fetchallnotes", fetchUser, async (req, res) => {
   const notes = await Notes.find({ user:req.user.id});
   res.json(notes);
 });
 
-//Add a new Note
+//Add a new Note POST Login Required
 router.post(
   "/addnote",
   fetchUser,
@@ -42,5 +42,35 @@ router.post(
     
   }
 );
+
+//Update a Note PUT Login Required
+router.put(
+  "/updatenote/:id",
+  fetchUser,
+  async (req, res) => {
+    const {title,description,tag} = req.body;
+    //Create new Note
+    const newNote = {};
+    if (title){newNote.title=title}
+    if (description){newNote.description=description}
+    if (tag){newNote.tag=tag}
+
+    //find the note and update
+
+    let note = await Notes.findById(req.params.id)
+    if(!note){
+      return req.status(404).send("Not Found")
+    }
+
+    if(note.user.toString()!==req.user.id){
+      return req.status(401).send("Unauthorised Access")
+    }
+
+    note = await Notes.findByIdAndUpdate(req.params.id,{$set:newNote}, {new:true})
+    res.json({note})
+}
+);
+
+
 
 module.exports = router;
