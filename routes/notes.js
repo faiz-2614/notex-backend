@@ -49,7 +49,8 @@ router.put(
   fetchUser,
   async (req, res) => {
     const {title,description,tag} = req.body;
-    //Create new Note
+    try {
+      //Create new Note
     const newNote = {};
     if (title){newNote.title=title}
     if (description){newNote.description=description}
@@ -68,6 +69,10 @@ router.put(
 
     note = await Notes.findByIdAndUpdate(req.params.id,{$set:newNote}, {new:true})
     res.json({note})
+    } catch (error) {
+      res.status(500).send("Internal Error");
+    }
+    
 }
 );
 
@@ -78,7 +83,8 @@ router.delete(
   fetchUser,
   async (req, res) => {
     
-    //find the note and delete
+    try {
+      //find the note and delete
     let note = await Notes.findById(req.params.id)
     if(!note){
       return req.status(404).send("Not Found")
@@ -90,6 +96,10 @@ router.delete(
 
     note = await Notes.findByIdAndDelete(req.params.id)
     res.json("Deleted")
+    } catch (error) {
+      res.status(500).send("Internal Error");
+    }
+    
 }
 );
 
