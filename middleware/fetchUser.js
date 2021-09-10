@@ -14,7 +14,7 @@ const fetchUser = (req,res,next)=>{
     next();
     }
     catch(error){
-        res.status(400).send({error:"Access Denied"})
+        res.status(401).send({error:"Access here Denied"})
     }
 
 }
