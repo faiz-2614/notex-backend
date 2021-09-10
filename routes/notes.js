@@ -72,5 +72,27 @@ router.put(
 );
 
 
+//Delete a note 
+router.delete(
+  "/deletenote/:id",
+  fetchUser,
+  async (req, res) => {
+    
+    //find the note and delete
+    let note = await Notes.findById(req.params.id)
+    if(!note){
+      return req.status(404).send("Not Found")
+    }
+//delete only if use is same
+    if(note.user.toString()!==req.user.id){
+      return req.status(401).send("Unauthorised Access")
+    }
+
+    note = await Notes.findByIdAndDelete(req.params.id)
+    res.json("Deleted")
+}
+);
+
+
 
 module.exports = router;
