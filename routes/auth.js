@@ -13,15 +13,16 @@ const JWT_SECRET = "notex";
 router.post(
   "/createuser",
   [
-    body("email", "Enter a valid Name").isEmail(),
     body("name").isLength({ min: 3 }),
+    body("email", "Enter a valid Name").isEmail(),
     body("password").isLength({ min: 8 }),
   ],
   async (req, res) => {
     //if error
+    let success = false
     const errors = validationResult(req);
     if (!errors.isEmpty()) {
-      return res.status(400).json({ errors: errors.array() });
+      return res.status(400).json({success, errors: errors.array() });
     }
     //check if user with email exist
     try {
@@ -29,7 +30,7 @@ router.post(
       if (user) {
         return res
           .status(400)
-          .json({ error: "User With Email Already Exists" });
+          .json({success, error: "User With Email Already Exists" });
       }
 
       const salt = await bycrypt.genSalt(10);
@@ -51,7 +52,8 @@ router.post(
         },
       };
       const auth_token = jwt.sign(data, JWT_SECRET);
-      res.json({ auth_token });
+      success = true
+      res.json({ success,auth_token });
     } catch (error) {
       console.error(error.message);
      
@@ -68,6 +70,7 @@ router.post(
   ],
   async (req, res) => {
     //if error
+    let success = false
     const errors = validationResult(req);
     if (!errors.isEmpty()) {
       return res.status(400).json({ errors: errors.array() });
@@ -85,7 +88,7 @@ router.post(
       if (!passCompare) {
         return res
           .status(400)
-          .json({ error: "Try Login with Correct Credentials" });
+          .json({success, error: "Try Login with Correct Credentials" });
       }
       const data = {
         user: {
@@ -93,7 +96,8 @@ router.post(
         },
       };
       const auth_token = jwt.sign(data, JWT_SECRET);
-      res.json({ auth_token });
+      success= true
+      res.json({success, auth_token });
     } catch (error) {
       console.error(error.message);
       res.status(500).send("Internal error");
